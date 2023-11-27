@@ -1,0 +1,12 @@
+<div class="cards-grid">
+    <mat-card *ngFor="let card of cardsList">
+      <img mat-card-image [src]="card.imageUrl" alt="{{ card.name }}">
+      <mat-card-content>
+        <h3>{{ card.name }}</h3>
+        <p>{{ card.description }}</p>
+      </mat-card-content>
+      <mat-card-actions>
+        <button mat-button>Details</button>
+      </mat-card-actions>
+    </mat-card>
+</div>
