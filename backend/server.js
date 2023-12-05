@@ -22,9 +22,10 @@ db.connect(err => {
   console.log('MySQL Connected...');
 });
 
-// Example route to get all cards
+
+// Example route to get selected columns from all cards
 app.get('/cards', (req, res) => {
-  const sql = 'SELECT * FROM cards';
+  const sql = 'SELECT name, rarity, type, nation, amount_in_stock FROM cards';
   db.query(sql, (err, results) => {
     if (err) throw err;
     res.send(results);

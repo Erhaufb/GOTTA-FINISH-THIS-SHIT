@@ -9,7 +9,7 @@ import { CardsComponent } from './cards/cards.component';
 import { AboutComponent } from './about/about.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HttpClientModule } from '@angular/common/http';  // Added this import
-
+import { FormsModule } from '@angular/forms';
 // Importing the Angular Material toolbar module
 import { MatToolbarModule } from '@angular/material/toolbar';
 
@@ -23,6 +23,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
   imports: [
     BrowserModule,
     AppRoutingModule,
+    FormsModule, // Add this line
     MatCardModule,
     BrowserAnimationsModule,
     MatToolbarModule,

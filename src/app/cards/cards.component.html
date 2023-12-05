@@ -1,12 +1,30 @@
-<div class="cards-grid">
-    <mat-card *ngFor="let card of cardsList">
-      <img mat-card-image [src]="card.imageUrl" alt="{{ card.name }}">
-      <mat-card-content>
-        <h3>{{ card.name }}</h3>
-        <p>{{ card.description }}</p>
-      </mat-card-content>
-      <mat-card-actions>
-        <button mat-button>Details</button>
-      </mat-card-actions>
-    </mat-card>
+<!-- cards.component.html -->
+
+<!-- Drag and drop container -->
+<div (dragover)="onFileDragOver($event)" (drop)="onFileDrop($event)">
+  <p>Please Select CVS File</p>
+  <!-- File input with event binding inside the drag and drop container -->
+  <input type="file" (change)="onFileSelected($event)" accept=".csv">
+</div>
+
+<!-- Card container -->
+<div class="card-container">
+  <div *ngFor="let card of cardsList; let i = index" class="card-box">
+    <div class="delete-btn" (click)="confirmDelete(card, i)">
+      <div class="delete-icon">❌</div>
+    </div>
+    <div class="card-info" (click)="showCardDetails(card)">
+      <h3>{{ card.name }}</h3>
+      <p>Rarity: {{ card.rarity }}</p>
+      <p>Type: {{ card.type }}</p>
+      <p>Nation: {{ card.nation }}</p>
+      <p>Amount in Stock: {{ card.amount_in_stock }}</p>
+      
+      <!-- Input field for updating amount in stock -->
+      <input type="number" [(ngModel)]="card.amount_in_stock" placeholder="New Amount">
+      
+      <!-- Button to trigger the updateCard method -->
+      <button (click)="updateCard(card)">Update Amount</button>
+    </div>
+  </div>
 </div>
