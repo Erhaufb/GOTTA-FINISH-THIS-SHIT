@@ -1,10 +1,17 @@
-<!-- cards.component.html -->
+<!-- Header container for Search bar and Choose CSV File -->
+<div class="header-container">
+  <!-- Search bar at the middle-top -->
+  <div class="search-bar">
+    <input type="text" placeholder="Search by card name" [(ngModel)]="searchTerm" (input)="loadCards()">
+  </div>
 
-<!-- Drag and drop container -->
-<div (dragover)="onFileDragOver($event)" (drop)="onFileDrop($event)">
-  <p>Please Select CVS File</p>
-  <!-- File input with event binding inside the drag and drop container -->
-  <input type="file" (change)="onFileSelected($event)" accept=".csv">
+  <!-- Drag and drop container for CSV file -->
+  <div class="csv-upload" (dragover)="onFileDragOver($event)" (drop)="onFileDrop($event)">
+    <p>Please Select CSV File</p>
+    <!-- File input with event binding inside the drag and drop container -->
+    <button (click)="fileInput.click()">Choose File</button>
+    <input type="file" #fileInput style="display: none;" accept=".csv" (change)="onFileSelected($event)">
+  </div>
 </div>
 
 <!-- Card container -->
@@ -19,12 +26,12 @@
       <p>Type: {{ card.type }}</p>
       <p>Nation: {{ card.nation }}</p>
       <p>Amount in Stock: {{ card.amount_in_stock }}</p>
-      
+
       <!-- Input field for updating amount in stock -->
-      <input type="number" [(ngModel)]="card.amount_in_stock" placeholder="New Amount">
-      
-      <!-- Button to trigger the updateCard method -->
-      <button (click)="updateCard(card)">Update Amount</button>
+      <input *ngIf="card === selectedCardData" type="number" [(ngModel)]="updatedAmount" placeholder="New Amount">
+
+      <!-- Button to trigger the updateCardAmount method -->
+      <button *ngIf="card === selectedCardData" (click)="updateCardAmount(card)">Update Amount</button>
     </div>
   </div>
 </div>

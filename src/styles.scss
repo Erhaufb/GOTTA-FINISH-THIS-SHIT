@@ -37,3 +37,8 @@ $cardfight-vanguard-ui-theme: mat.define-light-theme((
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+.header {
+  background-color: #112d5b; /* Your preferred background color */
+  color: #fff; /* Your preferred text color */
+}

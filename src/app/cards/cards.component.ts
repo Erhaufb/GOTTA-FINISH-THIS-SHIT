@@ -11,39 +11,89 @@ import { v4 as uuidv4 } from 'uuid';
 })
 export class CardsComponent implements OnInit {
 
+  updatedAmount: number | undefined;
+  originalCards: any[] = [];
   cardsList: any[] = [];
+  selectedCardData: any = {};
+  searchTerm: string = '';
 
   constructor(private cardsService: CardsService) { }
 
   ngOnInit(): void {
-    // Fetch cards from localStorage on component initialization
+    this.loadCards();
+  }
+
+  loadCards(): void {
+    // Fetch original cards from localStorage on component initialization
     const storedCards = localStorage.getItem('cards');
-    this.cardsList = storedCards ? JSON.parse(storedCards) : [];
+    this.originalCards = storedCards ? JSON.parse(storedCards) : [];
 
     // Update card amounts from local storage
-    this.cardsList.forEach((card: any) => {
+    this.originalCards.forEach((card: any) => {
       const storedAmount = localStorage.getItem(`card_${card.id}`);
       if (storedAmount !== null) {
         card.amount_in_stock = Number(storedAmount);
       }
     });
+
+    // If selected card is present, update it in the original list
+    if (this.selectedCardData.id) {
+      const selectedCardIndex = this.originalCards.findIndex((card: { id: any; }) => card.id === this.selectedCardData.id);
+      if (selectedCardIndex !== -1) {
+        this.originalCards[selectedCardIndex] = { ...this.selectedCardData };
+      }
+    }
+
+    // Apply search filter
+    this.filterCards();
+
+    // Save the updated cards to localStorage
+    this.saveCardsToLocalStorage();
+  }
+
+  updateCardAmount(card: any): void {
+    if (this.updatedAmount !== undefined) {
+      card.amount_in_stock = this.updatedAmount;
+
+      // Use a unique key for each card in local storage
+      localStorage.setItem(`card_${card.id}`, this.updatedAmount.toString());
+
+      // Save the updated cards to localStorage
+      this.saveCardsToLocalStorage();
+
+      // Reset the updatedAmount variable
+      this.updatedAmount = undefined;
+    }
   }
 
   showCardDetails(card: any): void {
     // Implement logic to display detailed card information
     console.log('Clicked on card:', card);
+
+    // Update selectedCardData
+    this.selectedCardData = { ...card };
+
+    // Save the selected card data to localStorage
+    localStorage.setItem('selectedCardData', JSON.stringify(this.selectedCardData));
+
     const newAmount = prompt('Enter the new amount in stock:');
     if (newAmount !== null) {
-      card.amount_in_stock = Number(newAmount);
-  
-      // Use a unique key for each card in local storage
-      localStorage.setItem(`card_${card.id}`, newAmount);
-  
+      // Update only the selected card
+      this.selectedCardData.amount_in_stock = Number(newAmount);
+
+      // Use a unique key for the selected card in local storage
+      localStorage.setItem(`card_${this.selectedCardData.id}`, newAmount);
+
+      // Update the selected card in the list
+      const selectedCardIndex = this.cardsList.findIndex(c => c.id === this.selectedCardData.id);
+      if (selectedCardIndex !== -1) {
+        this.cardsList[selectedCardIndex].amount_in_stock = this.selectedCardData.amount_in_stock;
+      }
+
       // Save the updated cards to localStorage
-      localStorage.setItem('cards', JSON.stringify(this.cardsList));
+      this.saveCardsToLocalStorage();
     }
   }
-  
 
   updateCard(card: any): void {
     // Implement logic to update the card in the database
@@ -69,7 +119,7 @@ export class CardsComponent implements OnInit {
 
     // Remove the card from the local list and update localStorage
     this.cardsList.splice(index, 1);
-    localStorage.setItem('cards', JSON.stringify(this.cardsList));
+    this.saveCardsToLocalStorage();
   }
 
   onFileDragOver(event: DragEvent): void {
@@ -87,6 +137,7 @@ export class CardsComponent implements OnInit {
   }
 
   onFileSelected(event: Event): void {
+    event.preventDefault();  // Add this line to prevent the default behavior
     const inputElement = event.target as HTMLInputElement;
     const files = inputElement.files;
     if (files && files.length > 0) {
@@ -101,7 +152,7 @@ export class CardsComponent implements OnInit {
       this.processCSVContents(contents);
 
       // Save the updated cards to localStorage
-      localStorage.setItem('cards', JSON.stringify(this.cardsList));
+      this.saveCardsToLocalStorage();
     };
     reader.readAsText(file);
   }
@@ -111,7 +162,7 @@ export class CardsComponent implements OnInit {
 
     for (let i = 1; i < rows.length; i++) {
       const values = this.parseCSVRow(rows[i]);
-    
+
       const newCard = {
         name: values[0],
         rarity: values[1],
@@ -121,19 +172,22 @@ export class CardsComponent implements OnInit {
         id: uuidv4(), // Use UUIDs for unique IDs
       };
 
-      const existingCard = this.cardsList.find(card => card.name === newCard.name);
+      const existingCard = this.originalCards.find(card => card.name === newCard.name);
 
       if (existingCard) {
         existingCard.amount_in_stock = newCard.amount_in_stock;
         localStorage.setItem(`card_${existingCard.id}`, existingCard.amount_in_stock.toString());
       } else {
-        this.cardsList.push(newCard);
+        this.originalCards.push(newCard);
         localStorage.setItem(`card_${newCard.id}`, newCard.amount_in_stock.toString());
       }
     }
 
+    // Apply search filter
+    this.filterCards();
+
     // Save the updated cards to localStorage
-    localStorage.setItem('cards', JSON.stringify(this.cardsList));
+    this.saveCardsToLocalStorage();
   }
 
   private parseCSVRow(row: string): string[] {
@@ -148,19 +202,21 @@ export class CardsComponent implements OnInit {
     return values;
   }
 
-  private generateUniqueId(card: any): string {
-    const uniqueString = `${card.name}${card.rarity}${card.type}${card.nation}`;
-    const hash = this.hashCode(uniqueString);
-    return `card_${hash}`;
+  private saveCardsToLocalStorage(): void {
+    localStorage.setItem('cards', JSON.stringify(this.originalCards));
   }
-  
-  
-  private hashCode(s: string): number {
-    let hash = 0;
-    for (let i = 0; i < s.length; i++) {
-      const char = s.charCodeAt(i);
-      hash = (hash << 5) - hash + char;
+
+  private filterCards(): void {
+    // Filter cards based on search term
+    if (this.searchTerm) {
+      this.cardsList = this.filterCardsByName(this.originalCards, this.searchTerm);
+    } else {
+      // If there's no search term, display all cards
+      this.cardsList = [...this.originalCards];
     }
-    return hash;
+  }
+
+  private filterCardsByName(cards: any[], searchTerm: string): any[] {
+    return cards.filter(card => card.name.toLowerCase().includes(searchTerm.toLowerCase()));
   }
 }
